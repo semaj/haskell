@@ -7,7 +7,7 @@ playerWidth = 10
 ballRadius = 9.0
 
 data Player = Player { px :: Float, py :: Float } 
-data Ball = Ball { bx :: Float, by :: Float } 
+data Ball = Ball { bx :: Float, by :: Float, bxv :: Float, byv :: Float } 
 data World = World { player1 :: Player,
                      player2 :: Player,
                      ball :: Ball }
@@ -21,7 +21,7 @@ drawBall ball = Translate (bx ball) (by ball) (circleSolid ballRadius)
 initialWorld :: World
 initialWorld = World { player1 = Player (-200) 0,
                        player2 = Player 200 0,
-                       ball = Ball 0 0 }
+                       ball = Ball 0 0 5 5 }
 
 draw :: World -> Picture
 draw world = Pictures [ drawBall (ball world),
@@ -45,9 +45,12 @@ ballHittingWall b
 
 stepBall :: Player -> Player -> Ball -> Ball
 stepBall p1 p2 b
-  | ballHittingPlayer p1 b = Ball (- (bx b)) (by b)
-  | ballHittingPlayer p2 b = Ball (- (bx b)) (by b)
-  | ballHittingWall b = Ball (bx b) (- (by b))
+  | ballHittingPlayer p1 b || ballHittingPlayer p2 b 
+    = Ball ((bx b) - (bxv b)) ((by b) + (byv b)) (- (bxv b)) (byv b)
+  | ballHittingWall b 
+    = Ball ((bx b) + (bxv b)) ((by b) - (byv b)) (bxv b) (- (byv b))
+  | otherwise
+    = Ball ((bx b) + (bxv b)) ((by b) + (byv b)) (bxv b) (byv b)
               
 step :: Float -> World -> World
 step f world = let p1 = player1 world
@@ -63,7 +66,7 @@ event e world = world
 main
  = play (InWindow "PONG" (500, 500) (10, 10))
         white
-        1
+        10
         initialWorld
         draw
         event
