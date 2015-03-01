@@ -19,9 +19,9 @@ drawBall :: Ball -> Picture
 drawBall ball = Translate (bx ball) (by ball) (circleSolid ballRadius)
 
 initialWorld :: World
-initialWorld = World { player1 = Player (-200) 0,
-                       player2 = Player 200 0,
-                       ball = Ball 0 0 5 5 }
+initialWorld = World { player1 = Player (-301) 0,
+                       player2 = Player 301 0,
+                       ball = Ball 0 0 3 5 }
 
 draw :: World -> Picture
 draw world = Pictures [ drawBall (ball world),
@@ -36,21 +36,27 @@ ballHittingPlayer p b
   where ptop = (py p) + (playerHeight / 2)
         pbot = (py p) - (playerHeight / 2)
         bally = by b
+-- 
+-- ballPlayerMod :: Player -> Ball -> Float
+-- ballPlayerMod p b = 
+  -- | 
+  -- where ptop = (py p) + (playerHeight / 2)
+        -- pbot = (py p) - (playerHeight / 2)
 
 ballHittingWall :: Ball -> Bool
 ballHittingWall b
-  | (by b) == 0 = True
-  | (by b) == 500 = True
+  | (by b) == -250 = True
+  | (by b) == 250 = True
   | otherwise = False
 
 stepBall :: Player -> Player -> Ball -> Ball
 stepBall p1 p2 b
-  | ballHittingPlayer p1 b || ballHittingPlayer p2 b 
-    = Ball ((bx b) - (bxv b)) ((by b) + (byv b)) (- (bxv b)) (byv b)
-  | ballHittingWall b 
-    = Ball ((bx b) + (bxv b)) ((by b) - (byv b)) (bxv b) (- (byv b))
-  | otherwise
-    = Ball ((bx b) + (bxv b)) ((by b) + (byv b)) (bxv b) (byv b)
+   | ballHittingPlayer p1 b || ballHittingPlayer p2 b 
+     = Ball ((bx b) - (bxv b)) ((by b) + (byv b)) (- (bxv b)) (byv b)
+   | ballHittingWall b 
+     = Ball ((bx b) + (bxv b)) ((by b) - (byv b)) (bxv b) (- (byv b))
+   | otherwise
+     = Ball ((bx b) + (bxv b)) ((by b) + (byv b)) (bxv b) (byv b)
               
 step :: Float -> World -> World
 step f world = let p1 = player1 world
@@ -60,13 +66,21 @@ step f world = let p1 = player1 world
 
 
 event :: Event -> World -> World
-event e world = world
+event (EventKey (SpecialKey KeyUp) _ _ _) world
+  = World (player1 world) (Player (px (player2 world)) (10 + (py (player2 world)))) (ball world)
+event (EventKey (SpecialKey KeyDown) _ _ _) world
+  = World (player1 world) (Player (px (player2 world)) ((py (player2 world)) - 10)) (ball world)
+event (EventKey (Char 'w') _ _ _) world
+  = World (Player (px (player1 world)) ((py (player1 world)) + 10)) (player2 world) (ball world)
+event (EventKey (Char 's') _ _ _) world
+  = World (Player (px (player1 world)) ((py (player1 world)) - 10)) (player2 world) (ball world)
+event event world = world
 
 -- | Display the last event received as text.
 main
- = play (InWindow "PONG" (500, 500) (10, 10))
+ = play (InWindow "PONG" (600, 500) (10, 10))
         white
-        10
+        50
         initialWorld
         draw
         event
