@@ -1,4 +1,6 @@
 import System.IO
+import Control.Monad
+import Control.Monad.IO.Class
 import Data.Char
 
 i1 = [[1], [1], [1], [1]]
@@ -61,12 +63,15 @@ main = run (World "" 0 0 [] "" (0,0) "" False [])
 
 run :: World -> IO ()
 run w = do
+    isOpen <- hIsOpen stdin
+    unless isOpen main
     input <- getLine
     let next = act $ switch w $ ((words input) :: [String])
     if (respond next) then
       do
-        putStrLn ((foldl (\a x -> a ++ x ++ ",") "[" (moves next)) ++ "drop]")
-        hPutStrLn stderr ((foldl (\a x -> a ++ x ++ ",") "[" (moves next)) ++ "drop]")
+        putStrLn ((foldl (\a x -> a ++ x ++ ",") "" (moves next)) ++ "drop")
+        hFlush stdout
+        hPutStrLn stderr ((foldl (\a x -> a ++ x ++ ",") "" (moves next)) ++ "drop")
         run $ next { moves = [], respond = False }
     else
       do
